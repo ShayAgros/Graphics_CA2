@@ -5,6 +5,8 @@
 #include "Vector.h"
 #include "Matrix.h"
 
+#define DEFAULT_PROJECTION_PLANE_DISTANCE 0.01
+
 // this enum prob isnt needed, beacuse of built in axis info - m_nAxis
 enum Axis {
 	X_AXIS,
@@ -30,10 +32,13 @@ struct State {
 	bool object_transform;
 
 	Matrix ratio_mat;
-	Matrix coord_mat;
+	Matrix rotation_mat;
 	Matrix center_mat;
 	Matrix world_mat;
 	Matrix object_mat;
+	Matrix normalization_mat;
+
+	double projection_plane_distance;
 };
 
 class IritPolygon {
@@ -131,6 +136,9 @@ class IritWorld {
 	Vector m_axes[3];
 	Vector m_axes_origin;
 
+	double min_x, min_y, min_z;
+	double max_x, max_y, max_z;
+
 public:
 
 	// World state
@@ -161,6 +169,9 @@ public:
 	 * returns false on allocation error and true otherwise
 	*/
 	bool addObjectP(IritObject *p_object);
+
+	void setNormalizationMatrix(double min_x, double min_y, double min_z,
+					   double max_x, double max_y, double max_z);
 
 	bool isEmpty();
 

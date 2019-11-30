@@ -115,7 +115,7 @@ CCGWorkView::CCGWorkView()
 	world.state.perspective = false;
 	world.state.object_transform = true;
 
-	world.state.coord_mat = Matrix::Identity();
+	world.state.rotation_mat = Matrix::Identity();
 	world.state.center_mat = Matrix::Identity();
 	world.state.ratio_mat = Matrix::Identity();
 	world.state.world_mat = Matrix::Identity();

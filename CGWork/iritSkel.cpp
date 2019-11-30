@@ -125,6 +125,10 @@ bool CGSkelStoreData(IPObjectStruct *PObj)
 	const IPAttributeStruct *Attrs =
         AttrTraceAttributes(PObj -> Attr, PObj -> Attr);
 	IritObject *irit_object = world.createObject();
+	double min_x, min_y, min_z;
+	double max_x, max_y, max_z;
+
+	min_x = min_y = min_z = max_x = max_y = max_z = 0;
 
 	assert(irit_object);
 
@@ -192,11 +196,21 @@ bool CGSkelStoreData(IPObjectStruct *PObj)
 					has_normal = true;
 				irit_polygon->addPoint(PVertex, has_normal);
 
+				min_x = min(PVertex->Coord[0], min_x);
+				min_y = min(PVertex->Coord[1], min_y);
+				min_z = min(PVertex->Coord[2], min_z);
+
+				max_x = max(PVertex->Coord[0], max_x);
+				max_y = max(PVertex->Coord[1], max_y);
+				max_z = max(PVertex->Coord[2], max_z);
+
 				PVertex = PVertex -> Pnext;
 			}
 			while (PVertex != PPolygon -> PVertex && PVertex != NULL);
 			/* Close the polygon. */
 	}
+
+	world.setNormalizationMatrix(min_x, min_y, min_z, max_x, max_y, max_z);
 	/* Close the object. */
 	return true;
 }

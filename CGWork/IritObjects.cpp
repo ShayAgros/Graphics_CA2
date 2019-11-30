@@ -195,6 +195,9 @@ void IritObject::draw(CDC *pDCToUse, struct State state, Matrix &normal_transfor
 IritWorld::IritWorld() : m_objects_nr(0), m_objects_arr(nullptr) {
 	state.world_mat = Matrix::Identity();
 	state.object_mat = Matrix::Identity();
+	state.projection_plane_distance = DEFAULT_PROJECTION_PLANE_DISTANCE;
+	state.normalization_mat = Matrix::Identity();
+
 }
 
 IritWorld::IritWorld(Vector axes[NUM_OF_AXES], Vector &axes_origin) : m_objects_nr(0), m_objects_arr(nullptr) {
@@ -202,7 +205,10 @@ IritWorld::IritWorld(Vector axes[NUM_OF_AXES], Vector &axes_origin) : m_objects_
 		m_axes[i] = axes[i];
 	m_axes_origin = axes_origin;
 	state.world_mat = Matrix::Identity();
-	state.object_mat = Matrix::Identity();
+	state.object_mat = Matrix::Identity(); 
+	state.normalization_mat = Matrix::Identity();
+
+	state.projection_plane_distance = DEFAULT_PROJECTION_PLANE_DISTANCE;
 }
 
 IritWorld::~IritWorld() {
@@ -224,7 +230,7 @@ void IritWorld::setScreenMat(Vector axes[NUM_OF_AXES], Vector &axes_origin, int 
 	
 	// Set to correct coordinate system
 	coor_mat = Matrix(axes[0], axes[1], axes[2]);
-	state.coord_mat = coor_mat;
+	state.rotation_mat = coor_mat;
 
 	// Center to screen
 	center_mat = createTranslationMatrix(axes_origin);
@@ -267,7 +273,7 @@ bool IritWorld::isEmpty() {
 void IritWorld::draw(CDC *pDCToUse) {
 
 	// Normal doesnt need to be centered to screen
-	Matrix normal_transform = state.coord_mat * state.ratio_mat * state.world_mat * state.object_mat;
+	Matrix normal_transform = state.rotation_mat * state.ratio_mat * state.world_mat * state.object_mat * state.normalization_mat;
 	Matrix vertex_transform = state.center_mat * normal_transform;
 
 	// Normal ended being a BIT too big. Lets divide them by 3
@@ -276,6 +282,25 @@ void IritWorld::draw(CDC *pDCToUse) {
 
 	for (int i = 0; i < m_objects_nr; i++)
 		m_objects_arr[i]->draw(pDCToUse, state, normal_transform, vertex_transform);
+}
+
+void IritWorld::setNormalizationMatrix(double min_x, double min_y, double min_z,
+	double max_x, double max_y, double max_z)
+{
+	this->min_x = min_x;
+	this->min_y = min_y;
+	this->min_z = min_z;
+	this->max_x = max_x;
+	this->max_y = max_y;
+	this->max_z = max_z;
+
+	state.normalization_mat.array[X_AXIS][0] = 2 / (max_x - min_x);
+	state.normalization_mat.array[Y_AXIS][1] = 2 / (max_y - min_y);
+	state.normalization_mat.array[Z_AXIS][2] = 2 / (max_z - min_z);
+
+	state.normalization_mat.array[X_AXIS][3] = -(max_x + min_x) / (max_x - min_x);
+	state.normalization_mat.array[Y_AXIS][3] = -(max_y + min_y) / (max_y - min_y);
+	state.normalization_mat.array[Z_AXIS][3] =  (max_z + min_z) / (max_z - min_z);
 }
 
 Matrix createTranslationMatrix(double &x, double &y, double z) {
